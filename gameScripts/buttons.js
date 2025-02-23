@@ -10,7 +10,7 @@ function resetJimmy() {
 
 	// Reset HTML elements
 	document.getElementById("generation-counter").innerText =
-		"Generations: " + 0;
+		(window.innerWidth < 500 ? "Gens: " : "Generations: ") + 0;
 	document.getElementById("set-counter").innerText = "Sets: " + 0;
 	document.getElementById("training-counter").innerText = "Trained: " + 0;
 

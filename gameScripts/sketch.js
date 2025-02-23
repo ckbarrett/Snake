@@ -417,7 +417,7 @@ function restartGame() {
 	globalgencount++;
 	window.localStorage.setItem("age", globalgencount);
 	document.getElementById("generation-counter").innerText =
-		"Generations: " + globalgencount;
+		(window.innerWidth < 500 ? "Gens: " : "Generations: ") + globalgencount;
 
 	// Upload brain to save learning progress
 	uploadBrain();

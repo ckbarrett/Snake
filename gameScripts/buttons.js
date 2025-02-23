@@ -9,10 +9,13 @@ function resetJimmy() {
 	window.localStorage.setItem("sets", 0);
 
 	// Reset HTML elements
-	document.getElementById("training-counter").innerText = "Trained: " + 0;
+	document.getElementById("generation-counter").innerText =
+		"Generations: " + 0;
 	document.getElementById("set-counter").innerText = "Sets: " + 0;
-	document.getElementById("highscore").innerText = 0;
-	document.getElementById("generation-counter").innerText = "Jimmy's: " + 0;
+	document.getElementById("training-counter").innerText = "Trained: " + 0;
+
+	document.getElementById("score-counter").innerText = "High Score: " + 0;
+	document.getElementById("highscore").innerText = "High Score: " + 0;
 
 	// Create new brain and overwrite old brain
 	qlearner.brain = new Network(
@@ -62,7 +65,6 @@ function setButtons() {
 	document.getElementById("play").onclick = playJimmy;
 	document.getElementById("viewbrain").onclick = viewBrain;
 	document.getElementById("pause").style.display = "flex";
-	document.getElementById("viewbrain").style.display = "flex";
 	document.getElementById("jimmybrainslider").style.display = "none";
 	document.getElementById("play").style.display = "none";
 }

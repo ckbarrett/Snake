@@ -1,6 +1,6 @@
-var squareWidth = 20;
-var xOffset = 5;
-var yOffset = 5;
+var squareWidth = 40;
+var xOffset = 2;
+var yOffset = 2;
 var canvasWidth;
 var canvasHeight;
 var fr;
@@ -8,10 +8,8 @@ var realsnake;
 var apple;
 var gameOver = false;
 var inputUsed = false;
-var userInput = false;
 var isDrawBrain = true;
 var score = 0;
-var userhighscore = 0;
 var genCount = 1;
 
 var appleReward = 10;
@@ -99,16 +97,12 @@ function checkEatingApple(sn, sim) {
 		apple.square = apple.getRandomSquare();
 		drawSquare(apple.square, color(255, 0, 0));
 		score++;
-		document.getElementById("score-counter").innerText = score;
-		if (userInput) {
-			if (score > highscore) {
-				highscore = score;
-				document.getElementById("highscore").innerText = score;
-			}
-		}
+
+		document.getElementById("score-counter").innerText = "Score: " + score;
 		if (score > parseInt(window.localStorage.getItem("highscore"))) {
 			window.localStorage.setItem("highscore", score);
-			document.getElementById("highscore").innerText = score;
+			document.getElementById("highscore").innerText =
+				"High Score: " + score;
 		}
 		return true;
 	}
@@ -119,7 +113,8 @@ function calculateCanvasSize() {
 	// Extra width and height will be split automatically when canvas is centered
 	let extraWidth = (window.innerWidth % (xOffset + squareWidth)) + xOffset;
 	canvasWidth = window.innerWidth - extraWidth;
-	let extraHeightBuffer = 3 * (squareWidth + yOffset);
+	let extraHeightBuffer =
+		(window.innerWidth < 1050 ? 3 : 1) * (squareWidth + yOffset);
 	let extraHeight =
 		(window.innerHeight % (yOffset + squareWidth)) +
 		yOffset +
@@ -254,29 +249,21 @@ function setup() {
 	setButtons();
 	createSliders();
 
-	if (userInput) {
-		highscore = 0;
-		document.getElementById("highscore").innerText = highscore;
-		sliderDiv.style("display", "none");
-		document.getElementById("jimmyinfo").style.display = "none";
-	} else {
-		// Set headers from storage
-		hiddenLayerSize = hls_slider.value();
-		document.getElementById("slideroutput").innerText = hiddenLayerSize;
-		document.getElementById("jimmyinfo").style.display = "flex";
-		document.getElementById("highscore").innerText = parseInt(
-			window.localStorage.getItem("highscore")
-		);
-		document.getElementById("set-counter").innerText =
-			"Sets: " + parseInt(window.localStorage.getItem("sets"));
-		document.getElementById("training-counter").innerText =
-			"Training: " + parseInt(window.localStorage.getItem("training"));
+	// Set headers from storage
+	hiddenLayerSize = hls_slider.value();
+	document.getElementById("slideroutput").innerText = hiddenLayerSize;
+	document.getElementById("jimmyinfo").style.display = "flex";
+	document.getElementById("highscore").innerText =
+		"High Score: " + parseInt(window.localStorage.getItem("highscore"));
+	document.getElementById("set-counter").innerText =
+		"Sets: " + parseInt(window.localStorage.getItem("sets"));
+	document.getElementById("training-counter").innerText =
+		"Training: " + parseInt(window.localStorage.getItem("training"));
 
-		// Create qlearner and set brain to brain informaiton saved in storage
-		qlearner = new QLearner(realsnake, apple);
+	// Create qlearner and set brain to brain informaiton saved in storage
+	qlearner = new QLearner(realsnake, apple);
 
-		downloadBrain();
-	}
+	downloadBrain();
 
 	// Create canvas
 	let dimensions = calculateCanvasSize();
@@ -286,153 +273,133 @@ function setup() {
 }
 
 function draw() {
-	if (!userInput) {
-		// If hidden layer size has changed, reset hiddenLayerSize and reset Jimmy
-		if (hls_slider.value() != hiddenLayerSize) {
-			hiddenLayerSize = hls_slider.value();
-			document.getElementById("slideroutput").innerText = hiddenLayerSize;
-			resetJimmy();
+	// If hidden layer size has changed, reset hiddenLayerSize and reset Jimmy
+	if (hls_slider.value() != hiddenLayerSize) {
+		hiddenLayerSize = hls_slider.value();
+		document.getElementById("slideroutput").innerText = hiddenLayerSize;
+		resetJimmy();
+	}
+
+	// Prepare for simulation, read sliders
+	frameRate(60);
+	qlearner.randomize = 0;
+
+	// Initialize sim information
+	let oldState = qlearner.getCurrentState();
+	let oldStateArray = oldState.toArray();
+	let bestaction = null;
+	let currentTrapArray = [0, 0, 0, 0];
+	var actionList = ["up", "down", "left", "right"];
+	var rewardList = [safeReward, safeReward, safeReward, safeReward];
+	var newstates = [0, 0, 0, 0];
+	var dones = [false, false, false, false];
+	var savedsnake;
+	var shallowsnake;
+
+	// Simulate actions in actionList
+	for (let i = 0; i < actionList.length; i++) {
+		// Reassign the "active" snake as the reset savedsnake
+		savedsnake = Snake.copy(realsnake);
+		qlearner.snake = savedsnake;
+
+		// Perform the action
+		doAction(actionList[i], savedsnake);
+
+		// checkEatingApple but with the sim parameter as true as to not move the apple
+		if (checkEatingApple(savedsnake, true)) {
+			rewardList[i] += appleReward;
 		}
 
-		// Prepare for simulation, read sliders
-		frameRate(60);
-		qlearner.randomize = 0;
+		// Check is the simulated move results in a death
+		if (actionList[i] == "up" && oldStateArray[0] == 1) {
+			rewardList[i] += deathReward;
+		} else if (actionList[i] == "down" && oldStateArray[1] == 1) {
+			rewardList[i] += deathReward;
+		} else if (actionList[i] == "left" && oldStateArray[2] == 1) {
+			rewardList[i] += deathReward;
+		} else if (actionList[i] == "right" && oldStateArray[3] == 1) {
+			rewardList[i] += deathReward;
+		}
 
-		// Initialize sim information
-		let oldState = qlearner.getCurrentState();
-		let oldStateArray = oldState.toArray();
-		let bestaction = null;
-		let currentTrapArray = [0, 0, 0, 0];
-		var actionList = ["up", "down", "left", "right"];
-		var rewardList = [safeReward, safeReward, safeReward, safeReward];
-		var newstates = [0, 0, 0, 0];
-		var dones = [false, false, false, false];
-		var savedsnake;
-		var shallowsnake;
+		if (rewardList[i] == deathReward) {
+			dones[i] = true;
+		}
 
-		// Simulate actions in actionList
-		for (let i = 0; i < actionList.length; i++) {
-			// Reassign the "active" snake as the reset savedsnake
-			savedsnake = Snake.copy(realsnake);
-			qlearner.snake = savedsnake;
+		savedsnake.move();
 
-			// Perform the action
-			doAction(actionList[i], savedsnake);
+		// Save whether or not the simulated move resulted in a trapped snake
+		if (!dones[i] && !determineAmpleRemainingSpace()) {
+			rewardList[i] = trappedReward;
+			currentTrapArray[i] = 1;
+		}
 
-			// checkEatingApple but with the sim parameter as true as to not move the apple
-			if (checkEatingApple(savedsnake, true)) {
-				rewardList[i] += appleReward;
-			}
+		// Shallow sim next move from indicated sim'd move to determine temp trap array
+		let tempTrapArray = [0, 0, 0, 0];
+		if (!dones[i]) {
+			for (let j = 0; j < actionList.length; j++) {
+				shallowsnake = Snake.copy(savedsnake);
+				qlearner.snake = shallowsnake;
 
-			// Check is the simulated move results in a death
-			if (actionList[i] == "up" && oldStateArray[0] == 1) {
-				rewardList[i] += deathReward;
-			} else if (actionList[i] == "down" && oldStateArray[1] == 1) {
-				rewardList[i] += deathReward;
-			} else if (actionList[i] == "left" && oldStateArray[2] == 1) {
-				rewardList[i] += deathReward;
-			} else if (actionList[i] == "right" && oldStateArray[3] == 1) {
-				rewardList[i] += deathReward;
-			}
+				// Do not need to check moves opposite to indicated sim'd move
+				if (actionList[i] == "up" && actionList[j] == "down") {
+					continue;
+				} else if (actionList[i] == "down" && actionList[j] == "up") {
+					continue;
+				} else if (
+					actionList[i] == "left" &&
+					actionList[j] == "right"
+				) {
+					continue;
+				} else if (
+					actionList[i] == "right" &&
+					actionList[j] == "left"
+				) {
+					continue;
+				}
 
-			if (rewardList[i] == deathReward) {
-				dones[i] = true;
-			}
+				// Perform the action
+				doAction(actionList[i], shallowsnake);
 
-			savedsnake.move();
+				shallowsnake.move();
 
-			// Save whether or not the simulated move resulted in a trapped snake
-			if (!dones[i] && !determineAmpleRemainingSpace()) {
-				rewardList[i] = trappedReward;
-				currentTrapArray[i] = 1;
-			}
-
-			// Shallow sim next move from indicated sim'd move to determine temp trap array
-			let tempTrapArray = [0, 0, 0, 0];
-			if (!dones[i]) {
-				for (let j = 0; j < actionList.length; j++) {
-					shallowsnake = Snake.copy(savedsnake);
-					qlearner.snake = shallowsnake;
-
-					// Do not need to check moves opposite to indicated sim'd move
-					if (actionList[i] == "up" && actionList[j] == "down") {
-						continue;
-					} else if (
-						actionList[i] == "down" &&
-						actionList[j] == "up"
-					) {
-						continue;
-					} else if (
-						actionList[i] == "left" &&
-						actionList[j] == "right"
-					) {
-						continue;
-					} else if (
-						actionList[i] == "right" &&
-						actionList[j] == "left"
-					) {
-						continue;
-					}
-
-					// Perform the action
-					doAction(actionList[i], shallowsnake);
-
-					shallowsnake.move();
-
-					// Save wehther or not the shallow simulated move resulted in a trapped state
-					if (!determineAmpleRemainingSpace()) {
-						tempTrapArray[j] = 1;
-					}
+				// Save wehther or not the shallow simulated move resulted in a trapped state
+				if (!determineAmpleRemainingSpace()) {
+					tempTrapArray[j] = 1;
 				}
 			}
-
-			qlearner.snake = savedsnake;
-			newstates[i] = qlearner.getCurrentState();
-			newstates[i].trappedState = tempTrapArray;
-
-			if (savedsnake.distance < realsnake.distance) {
-				rewardList[i] += closerReward;
-			}
-		}
-		oldState.trappedState = currentTrapArray;
-
-		// Reset qlearner's snake to realsnake
-		qlearner.snake = realsnake;
-
-		// Get best action and do the action
-		bestaction = qlearner.bestAction(oldState);
-		doAction(bestaction, realsnake);
-		qlearner.updateBrain(oldState, newstates, rewardList, dones);
-
-		// Check apple and collisions
-		checkEatingApple(realsnake, false);
-		checkCollisions(realsnake, false);
-		if (gameOver) {
-			genCount++;
-			restartGame();
-			return;
 		}
 
-		// Update the game
-		realsnake.move();
-		drawSnake();
-		inputUsed = false;
-	} else {
-		// Check if eating apple
-		checkEatingApple(realsnake, false);
+		qlearner.snake = savedsnake;
+		newstates[i] = qlearner.getCurrentState();
+		newstates[i].trappedState = tempTrapArray;
 
-		// Check for collisions
-		checkCollisions(realsnake, false);
-		if (gameOver) {
-			drawPlayAgainButton();
-			return;
+		if (savedsnake.distance < realsnake.distance) {
+			rewardList[i] += closerReward;
 		}
-
-		// Update the game
-		realsnake.move();
-		drawSnake();
-		inputUsed = false;
 	}
+	oldState.trappedState = currentTrapArray;
+
+	// Reset qlearner's snake to realsnake
+	qlearner.snake = realsnake;
+
+	// Get best action and do the action
+	bestaction = qlearner.bestAction(oldState);
+	doAction(bestaction, realsnake);
+	qlearner.updateBrain(oldState, newstates, rewardList, dones);
+
+	// Check apple and collisions
+	checkEatingApple(realsnake, false);
+	checkCollisions(realsnake, false);
+	if (gameOver) {
+		genCount++;
+		restartGame();
+		return;
+	}
+
+	// Update the game
+	realsnake.move();
+	drawSnake();
+	inputUsed = false;
 }
 
 function restartGame() {
@@ -440,27 +407,25 @@ function restartGame() {
 	realsnake = new Snake();
 	apple = new Apple();
 
-	if (!userInput) {
-		savedsnake = new Snake();
-		// Re-save snake and apple
-		qlearner.snake = realsnake;
-		qlearner.apple = apple;
+	savedsnake = new Snake();
+	// Re-save snake and apple
+	qlearner.snake = realsnake;
+	qlearner.apple = apple;
 
-		// Update generation counter in storage and HTML element
-		let globalgencount = parseInt(window.localStorage.getItem("age"));
-		globalgencount++;
-		window.localStorage.setItem("age", globalgencount);
-		document.getElementById("generation-counter").innerText =
-			"Jimmy's: " + globalgencount;
+	// Update generation counter in storage and HTML element
+	let globalgencount = parseInt(window.localStorage.getItem("age"));
+	globalgencount++;
+	window.localStorage.setItem("age", globalgencount);
+	document.getElementById("generation-counter").innerText =
+		"Generations: " + globalgencount;
 
-		// Upload brain to save learning progress
-		uploadBrain();
-	}
+	// Upload brain to save learning progress
+	uploadBrain();
 
 	// Reset score to 0 and redraw
 	resetscore = 0;
 	score = resetscore;
-	document.getElementById("score-counter").innerText = resetscore;
+	document.getElementById("score-counter").innerText = "Score: " + resetscore;
 	background(255);
 	drawSnakeComplete();
 	drawSquare(apple.square, color(255, 0, 0));

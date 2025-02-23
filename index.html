@@ -12,57 +12,36 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Snake - Christian Barrett</title>
 		<link rel="stylesheet" href="style.css" />
+		<link
+			href="https://fonts.googleapis.com/css?family=Oswald"
+			rel="stylesheet"
+		/>
 	</head>
 	<body>
-		<span id="basicinfo">
-			<span> Score: </span>
-			<var
-				id="score-counter"
-				class="align-middle"
-				style="margin-right: 10px"
-			>
-				0
-			</var>
-			<span>High Score: </span>
-			<var id="highscore" class="align-middle" style="margin-right: 10px">
-				0
-			</var>
-		</span>
-		<span id="jimmyinfo">
-			<span
-				id="generation-counter"
-				style="margin-right: 10px; margin-left: 10px"
-			>
-			</span>
-			<span
-				id="set-counter"
-				style="margin-right: 10px; margin-left: 10px"
-			>
-			</span>
-			<span
-				id="training-counter"
-				style="margin-right: 10px; margin-left: 10px"
-			>
-			</span>
-			<button type="button" class="btn btn-light btn-sm" id="reset">
-				Wipe Jimmy :(
-			</button>
-			<button type="button" class="btn btn-light btn-sm" id="pause">
-				Pause Jimmy
-			</button>
-			<button type="button" class="btn btn-light btn-sm" id="play">
-				Play Jimmy
-			</button>
-			<button
-				type="button"
-				class="btn btn-light btn-sm"
-				id="viewbrain"
-				data-bs-toggle="modal"
-				data-bs-target="#brainmodal"
-			>
-				View Brain
-			</button>
-		</span>
+		<div class="header">
+			<div id="jimmyinfo">
+				<span id="generation-counter"></span>
+				<span id="set-counter"></span>
+				<span id="training-counter"></span>
+			</div>
+			<div id="basicinfo">
+				<span id="score-counter"></span>
+				<span id="highscore"></span>
+			</div>
+			<div class="buttons">
+				<button type="button" id="pause">Pause</button>
+				<button type="button" id="play">Play</button>
+				<button
+					type="button"
+					id="viewbrain"
+					data-bs-toggle="modal"
+					data-bs-target="#brainmodal"
+				>
+					View Brain
+				</button>
+				<button type="button" id="reset">Wipe Brain</button>
+			</div>
+		</div>
 		<div id="container">
 			<div
 				class="modal fade"
@@ -73,7 +52,7 @@
 				<div class="modal-dialog modal-dialog-centered modal-lg">
 					<div class="modal-content">
 						<div class="modal-header bg-primary text-white">
-							<h5 class="modal-title">Jimmy's Brain</h5>
+							<h5 class="modal-title">Brain</h5>
 							<button
 								type="button"
 								id="closemodal"
@@ -109,7 +88,7 @@
 			integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
 			crossorigin="anonymous"
 		></script>
-		<script src="p5/p5.js"></script>
+		<script src="p5/p5.min.js"></script>
 		<script src="gameScripts/square.js"></script>
 		<script src="gameScripts/snake.js"></script>
 		<script src="gameScripts/apple.js"></script>

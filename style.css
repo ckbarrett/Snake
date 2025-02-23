@@ -1,25 +1,6 @@
-h1 {
-	background-color: #212121;
-	color: white;
-	display: block;
-	flex-direction: row;
-	align-items: left;
-	justify-content: left;
-	font-family: Arial, Helvetica, sans-serif;
-	font-size: 1em;
-	margin: 0;
-}
-
-h2 {
-	background-color: #212121;
-	color: white;
-	display: block;
-	flex-direction: row;
-	align-items: left;
-	justify-content: left;
-	font-family: Arial, Helvetica, sans-serif;
-	font-size: 1em;
-	margin: 0;
+* {
+	font-family: "Oswald";
+	font-size: x-large;
 }
 
 h3 {
@@ -34,7 +15,6 @@ body {
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	font-family: Arial, Helvetica, sans-serif;
 	min-height: 100vh;
 	margin: 0;
 }
@@ -45,9 +25,51 @@ body {
 	height: 100%;
 }
 
-.btn {
-	padding-top: 1px;
-	padding-bottom: 1px;
-	/* border-color: black; */
-	margin: 1px;
+@media screen and (max-width: 1050px) {
+	.header {
+		flex-direction: column;
+		align-items: center;
+	}
+}
+
+@media screen and (min-width: 1050px) {
+	.header {
+		flex-direction: row;
+		align-items: end;
+	}
+}
+
+.header {
+	display: flex;
+	width: 100%;
+	justify-content: space-around;
+	margin-bottom: 10px;
+}
+
+.buttons {
+	display: flex;
+	flex-direction: row;
+}
+
+button {
+	background-color: rgb(230, 0, 0);
+	color: white;
+	border: none;
+	border-radius: 5px;
+	padding: 0.25rem 1rem;
+	margin: 0 0.25rem;
+	cursor: pointer;
+	font-size: large;
+}
+
+button:hover {
+	background-color: rgb(200, 0, 0);
+}
+
+#jimmyinfo span {
+	padding: 0 10px;
+}
+
+#basicinfo span {
+	padding: 0 10px;
 }
